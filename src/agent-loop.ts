@@ -64,7 +64,7 @@ export async function agentLoop(
                   shouldBreak = true;
                 } else {
                   messages.push({
-                    role: 'user' as const,
+                    role: 'user',
                     content: `[系统提醒] ${detection.message}。请换一个思路解决问题，不要重复同样的操作。`,
                   });
                 }
