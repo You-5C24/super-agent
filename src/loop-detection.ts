@@ -22,10 +22,14 @@ export type DetectionResult =
       message: string;
     };
 
-const HISTORY_SIZE = 30;
-const WARNING_THRESHOLD = 5;
-const CRITICAL_THRESHOLD = 8;
-const BREAKER_THRESHOLD = 10;
+// --- 配置 ---
+
+const HISTORY_SIZE = 30; // 滑动窗口大小
+const WARNING_THRESHOLD = 5; // 警告阈值（演示用，生产环境通常是 10）
+const CRITICAL_THRESHOLD = 8; // 严重阈值（演示用，生产环境通常是 20）
+const BREAKER_THRESHOLD = 10; // 熔断阈值（演示用，生产环境通常是 30）
+
+// --- 指纹计算 ---
 
 function stableStringify(value: unknown): string {
   if (value === null || typeof value !== 'object') return JSON.stringify(value);
@@ -47,6 +51,8 @@ export function hashToolCall(toolName: string, params: unknown): string {
 export function hashResult(result: unknown): string {
   return hash(stableStringify(result));
 }
+
+// --- 滑动窗口 ---
 
 const history: ToolCallRecord[] = [];
 
@@ -81,6 +87,8 @@ export function recordResult(
 export function resetHistory(): void {
   history.length = 0;
 }
+
+// --- 检测器 ---
 
 function getNoProgressStreak(toolName: string, argsHash: string): number {
   let streak = 0;
@@ -120,6 +128,8 @@ function getPingPongCount(currentHash: string): number {
   if (currentHash === otherHash && count >= 2) return count + 1;
   return 0;
 }
+
+// --- 主检测函数 ---
 
 export function detect(toolName: string, params: unknown): DetectionResult {
   const argsHash = hashToolCall(toolName, params);
