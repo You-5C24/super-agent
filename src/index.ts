@@ -3,7 +3,8 @@ import { type ModelMessage } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createMockModel } from './mock-model.js';
 import { createInterface } from 'node:readline';
-import { weatherTool, calculatorTool } from './tools.js';
+import { ToolRegistry } from './tool-registry.js';
+import { allTools } from './tools.js';
 import { agentLoop } from './agent-loop.js';
 
 const qwen = createOpenAI({
@@ -15,7 +16,18 @@ const model = process.env.DASHSCOPE_API_KEY
   ? qwen.chat('qwen-plus-latest')
   : createMockModel();
 
-const tools = { get_weather: weatherTool, calculator: calculatorTool };
+const registry = new ToolRegistry();
+registry.register(...allTools);
+
+console.log(`已注册 ${registry.getAll().length} 个工具：`);
+for (const tool of registry.getAll()) {
+  const flags = [
+    tool.isConcurrencySafe ? '可并发' : '串行',
+    tool.isReadOnly ? '只读' : '读写',
+  ].join(', ');
+  console.log(`  - ${tool.name}（${flags}）`);
+}
+
 const messages: ModelMessage[] = [];
 const rl = createInterface({ input: process.stdin, output: process.stdout });
 
@@ -34,12 +46,14 @@ function ask() {
 
     messages.push({ role: 'user', content: trimmed });
 
-    await agentLoop(model, tools, messages, SYSTEM);
+    await agentLoop(model, registry, messages, SYSTEM);
 
     ask();
   });
 }
 
-console.log('Super Agent v0.3 — Fuses (type "exit" to quit)\n');
-console.log('试试输入："测试死循环"、"测试重试" 或随便聊几轮观察 Token 用量\n');
+console.log('Super Agent v0.4 — Tool System (type "exit" to quit)');
+console.log(
+  '试试："帮我看看当前目录"、"读取 package.json"、"测试并发"、"测试截断"\n'
+);
 ask();

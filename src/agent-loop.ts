@@ -1,4 +1,5 @@
 import { streamText, type ModelMessage } from 'ai';
+import { ToolRegistry } from './tool-registry.js';
 import {
   detect,
   recordCall,
@@ -13,7 +14,7 @@ const TOKEN_BUDGET = 15000;
 
 export async function agentLoop(
   model: any,
-  tools: any,
+  registry: ToolRegistry,
   messages: ModelMessage[],
   system: string
 ) {
@@ -37,7 +38,7 @@ export async function agentLoop(
         const result = streamText({
           model,
           system,
-          tools,
+          tools: registry.toAISDKFormat(),
           messages,
           maxRetries: 0,
           onError: () => {},
