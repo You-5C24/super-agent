@@ -33,6 +33,7 @@ export async function agentLoop(
     let stepResponse: any;
     let stepUsage: any;
 
+    // 步骤级重试：包裹整个 stream 消费过程
     for (let attempt = 1; ; attempt++) {
       try {
         // 使用 Vercel AI SDK 发起一次「可流式输出」的对话请求
@@ -59,6 +60,7 @@ export async function agentLoop(
                 `  [调用: ${part.toolName}(${JSON.stringify(part.input)})]`
               );
 
+              // 三层防护：循环检测
               const detection = detect(part.toolName, part.input);
               if (detection.stuck) {
                 console.log(`  ${detection.message}`);
@@ -92,6 +94,7 @@ export async function agentLoop(
         stepUsage = await result.usage;
         break;
       } catch (error) {
+        // 三层防护：API容错
         if (attempt > MAX_RETRIES || !isRetryable(error as Error)) throw error;
         const delay = calculateDelay(attempt);
         console.log(
@@ -113,7 +116,7 @@ export async function agentLoop(
     // 拿到这一步的完整结果，追加到消息历史
     messages.push(...stepResponse.messages);
 
-    // Token 预算追踪
+    // 三层防护：Token 预算追踪
     const inp =
       typeof stepUsage?.inputTokens === 'number'
         ? stepUsage.inputTokens
@@ -125,6 +128,8 @@ export async function agentLoop(
     totalTokens += inp + out;
     const pct = Math.round((totalTokens / TOKEN_BUDGET) * 100);
     console.log(`  [Token] ${totalTokens}/${TOKEN_BUDGET} (${pct}%)`);
+
+    // 退出条件：Token 预算耗尽
     if (totalTokens > TOKEN_BUDGET) {
       console.log('\n[Token 预算耗尽，强制停止]');
       break;
@@ -139,6 +144,7 @@ export async function agentLoop(
     console.log('  \u2192 继续下一步...');
   }
 
+  // 退出条件：达到最大步数限制
   if (step >= MAX_STEPS) {
     console.log('\n[达到最大步数限制，强制停止]');
   }
