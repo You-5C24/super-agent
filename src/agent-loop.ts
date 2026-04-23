@@ -35,6 +35,7 @@ export async function agentLoop(
 
     for (let attempt = 1; ; attempt++) {
       try {
+        // 使用 Vercel AI SDK 发起一次「可流式输出」的对话请求
         const result = streamText({
           model,
           system,
@@ -109,6 +110,7 @@ export async function agentLoop(
       break;
     }
 
+    // 拿到这一步的完整结果，追加到消息历史
     messages.push(...stepResponse.messages);
 
     // Token 预算追踪
@@ -128,6 +130,7 @@ export async function agentLoop(
       break;
     }
 
+    // 退出条件：模型没有调用任何工具，说明它认为可以直接回复了
     if (!hasToolCall) {
       if (fullText) console.log();
       break;
