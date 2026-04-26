@@ -15,8 +15,11 @@ const DEFAULT_MAX_RESULT_CHARS = 3000;
 export class ToolRegistry {
   private tools = new Map<string, ToolDefinition>();
 
+  // 是否已有独占任务在执行（true 时禁止新共享锁进入）
   private exclusiveLock = false;
+  // 当前持有共享锁的任务数量
   private concurrentCount = 0;
+  // 等待锁的任务队列；锁释放时统一唤醒，重新竞争
   private waitQueue: Array<() => void> = [];
 
   register(...tools: ToolDefinition[]): void {
@@ -35,6 +38,7 @@ export class ToolRegistry {
 
   // 获取共享锁（多个只读工具可以同时拿到）
   private async acquireConcurrent(): Promise<void> {
+    // 有独占锁时，读任务必须等待（避免与写任务并发）
     while (this.exclusiveLock) {
       await new Promise<void>((r) => this.waitQueue.push(r));
     }
@@ -48,6 +52,7 @@ export class ToolRegistry {
 
   // 获取独占锁（必须等所有共享锁释放）
   private async acquireExclusive(): Promise<void> {
+    // 只要已有独占锁，或仍有共享锁在执行，就持续等待
     while (this.exclusiveLock || this.concurrentCount > 0) {
       await new Promise<void>((r) => this.waitQueue.push(r));
     }
@@ -78,9 +83,11 @@ export class ToolRegistry {
         inputSchema: jsonSchema(tool.parameters as any),
         execute: async (input: any) => {
           if (isSafe) {
+            // 只读、并发安全，拿共享锁
             await registry.acquireConcurrent();
             console.log(`  [并发] ${name} 获取共享锁`);
           } else {
+            // 有副作用、非并发安全，拿独占锁
             await registry.acquireExclusive();
             console.log(`  [串行] ${name} 获取独占锁，等待其他工具完成`);
           }
@@ -90,9 +97,12 @@ export class ToolRegistry {
               typeof raw === 'string' ? raw : JSON.stringify(raw, null, 2);
             return truncateResult(text, maxChars);
           } finally {
+            // 无论 executeFn 成功还是抛错，都必须释放锁，避免后续任务永远阻塞
             if (isSafe) {
+              // 只读、并发安全，释放共享锁
               registry.releaseConcurrent();
             } else {
+              // 有副作用、非并发安全，释放独占锁
               registry.releaseExclusive();
             }
           }
