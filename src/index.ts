@@ -5,6 +5,7 @@ import { createMockModel } from './mock-model.js';
 import { createInterface } from 'node:readline';
 import { ToolRegistry } from './tool-registry.js';
 import { allTools } from './tools.js';
+import { MCPClient, MockMCPClient } from './mcp-client.js';
 import { agentLoop } from './agent-loop.js';
 
 const qwen = createOpenAI({
@@ -19,41 +20,86 @@ const model = process.env.DASHSCOPE_API_KEY
 const registry = new ToolRegistry();
 registry.register(...allTools);
 
-console.log(`已注册 ${registry.getAll().length} 个工具：`);
-for (const tool of registry.getAll()) {
-  const flags = [
-    tool.isConcurrencySafe ? '可并发' : '串行',
-    tool.isReadOnly ? '只读' : '读写',
-  ].join(', ');
-  console.log(`  - ${tool.name}（${flags}）`);
+async function connectMCP() {
+  const githubToken = process.env.GITHUB_PERSONAL_ACCESS_TOKEN;
+
+  let canSpawn = true;
+  try {
+    const { execSync } = await import('node:child_process');
+    execSync('echo test', { stdio: 'ignore' });
+  } catch {
+    canSpawn = false;
+  }
+
+  if (githubToken && canSpawn) {
+    console.log('\n连接 GitHub MCP Server...');
+    try {
+      const client = new MCPClient(
+        'npx',
+        ['-y', '@modelcontextprotocol/server-github'],
+        { GITHUB_PERSONAL_ACCESS_TOKEN: githubToken }
+      );
+      const tools = await registry.registerMCPServer('github', client);
+      console.log(`  已注册 ${tools.length} 个 MCP 工具`);
+      return;
+    } catch (err) {
+      console.log(
+        `  MCP 连接失败: ${err instanceof Error ? err.message : err}`
+      );
+      console.log('  降级为 Mock MCP...');
+    }
+  }
+
+  if (!githubToken) {
+    console.log('\n未配置 GITHUB_PERSONAL_ACCESS_TOKEN，使用 Mock MCP');
+  }
+
+  const mockClient = new MockMCPClient();
+  const tools = await registry.registerMCPServer('github', mockClient);
+  console.log(`  已注册 ${tools.length} 个 Mock MCP 工具`);
 }
 
-const messages: ModelMessage[] = [];
-const rl = createInterface({ input: process.stdin, output: process.stdout });
+async function main() {
+  await connectMCP();
 
-const SYSTEM = `你是 Super Agent，一个有工具调用能力的 AI 助手。
-需要查询信息时，主动使用工具，不要编造数据。
+  console.log(`\n已注册 ${registry.getAll().length} 个工具：`);
+  for (const tool of registry.getAll()) {
+    const isMCP = tool.name.startsWith('mcp__');
+    const flags = [
+      isMCP ? 'MCP' : '内置',
+      tool.isConcurrencySafe ? '可并发' : '串行',
+    ].join(', ');
+    console.log(`  - ${tool.name}（${flags}）`);
+  }
+
+  const messages: ModelMessage[] = [];
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+
+  const SYSTEM = `你是 Super Agent，一个有工具调用能力的 AI 助手。
+你有内置工具和 MCP 工具可用。MCP 工具以 mcp__ 开头，如 mcp__github__list_issues。
+需要查询 GitHub 信息时，使用 mcp__github__ 前缀的工具。
+需要操作本地文件时，使用内置工具。
 回答要简洁直接。`;
 
-function ask() {
-  rl.question('\nYou: ', async (input) => {
-    const trimmed = input.trim();
-    if (!trimmed || trimmed === 'exit') {
-      console.log('Bye!');
-      rl.close();
-      return;
-    }
+  function ask() {
+    rl.question('\nYou: ', async (input) => {
+      const trimmed = input.trim();
+      if (!trimmed || trimmed === 'exit') {
+        console.log('Bye!');
+        await registry.closeAllMCP();
+        rl.close();
+        return;
+      }
 
-    messages.push({ role: 'user', content: trimmed });
+      messages.push({ role: 'user', content: trimmed });
+      await agentLoop(model, registry, messages, SYSTEM);
+      ask();
+    });
+  }
 
-    await agentLoop(model, registry, messages, SYSTEM);
-
-    ask();
-  });
+  console.log('\nSuper Agent v0.5 — MCP (type "exit" to quit)');
+  console.log('试试："查看 vercel/ai 的 issues"、"搜索 MCP 相关的仓库"\n');
+  ask();
 }
 
-console.log('Super Agent v0.4 — Tool System (type "exit" to quit)');
-console.log(
-  '试试："帮我看看当前目录"、"读取 package.json"、"测试并发"、"测试截断"\n'
-);
-ask();
+main().catch(console.error);

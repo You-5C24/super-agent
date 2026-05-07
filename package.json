@@ -6,15 +6,16 @@
     "start": "tsx src/index.ts"
   },
   "dependencies": {
-    "ai": "5.0.98",
     "@ai-sdk/openai": "2.0.44",
-    "zod": "3.25.76",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "ai": "5.0.98",
     "dotenv": "16.5.0",
-    "fast-glob": "3.3.3"
+    "fast-glob": "3.3.3",
+    "zod": "3.25.76"
   },
   "devDependencies": {
-    "tsx": "4.19.4",
     "@types/node": "22.15.3",
+    "tsx": "4.19.4",
     "typescript": "5.8.3"
   }
 }
