@@ -11,10 +11,12 @@
     "ai": "5.0.98",
     "dotenv": "16.5.0",
     "fast-glob": "3.3.3",
+    "turndown": "^7.2.4",
     "zod": "3.25.76"
   },
   "devDependencies": {
     "@types/node": "22.15.3",
+    "@types/turndown": "^5.0.6",
     "tsx": "4.19.4",
     "typescript": "5.8.3"
   }
