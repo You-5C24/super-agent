@@ -9,6 +9,7 @@ export interface ToolDefinition {
   isReadOnly?: boolean;
   maxResultChars?: number;
   execute: (input: any) => Promise<unknown>;
+  profile?: string[];
   shouldDefer?: boolean;
   searchHint?: string;
 }
@@ -19,13 +20,11 @@ export class ToolRegistry {
   private tools = new Map<string, ToolDefinition>();
   private mcpClients: Array<MCPClient | MockMCPClient> = [];
 
-  // 是否已有独占任务在执行（true 时禁止新共享锁进入）
   private exclusiveLock = false;
-  // 当前持有共享锁的任务数量
   private concurrentCount = 0;
-  // 等待锁的任务队列；锁释放时统一唤醒，重新竞争
   private waitQueue: Array<() => void> = [];
 
+  private activeProfile: string = 'full';
   private discoveredTools = new Set<string>();
 
   register(...tools: ToolDefinition[]): void {
@@ -46,7 +45,6 @@ export class ToolRegistry {
 
     for (const tool of tools) {
       const prefixedName = `mcp__${serverName}__${tool.name}`;
-
       if (this.tools.has(prefixedName)) continue;
 
       const toolClient = client;
@@ -59,6 +57,7 @@ export class ToolRegistry {
         isConcurrencySafe: true,
         isReadOnly: true,
         maxResultChars: 3000,
+        profile: ['full'],
         shouldDefer: true,
         searchHint: `${serverName} ${tool.name} ${tool.description}`,
         execute: async (input: any) => {
@@ -79,6 +78,18 @@ export class ToolRegistry {
     this.mcpClients = [];
   }
 
+  setProfile(profile: string): void {
+    this.activeProfile = profile;
+  }
+
+  getProfile(): string {
+    return this.activeProfile;
+  }
+
+  markDiscovered(name: string): void {
+    this.discoveredTools.add(name);
+  }
+
   get(name: string): ToolDefinition | undefined {
     return this.tools.get(name);
   }
@@ -89,6 +100,9 @@ export class ToolRegistry {
 
   getActiveTools(): ToolDefinition[] {
     return this.getAll().filter((tool) => {
+      if (tool.profile && !tool.profile.includes(this.activeProfile)) {
+        return false;
+      }
       if (tool.shouldDefer && !this.discoveredTools.has(tool.name)) {
         return false;
       }
@@ -141,6 +155,8 @@ export class ToolRegistry {
     let deferred = 0;
 
     for (const tool of this.tools.values()) {
+      if (tool.profile && !tool.profile.includes(this.activeProfile)) continue;
+
       const schemaSize = JSON.stringify({
         name: tool.name,
         description: tool.description,
@@ -158,9 +174,7 @@ export class ToolRegistry {
     return { active, deferred, total: active + deferred };
   }
 
-  // 获取共享锁（多个只读工具可以同时拿到）
   private async acquireConcurrent(): Promise<void> {
-    // 有独占锁时，读任务必须等待（避免与写任务并发）
     while (this.exclusiveLock) {
       await new Promise<void>((r) => this.waitQueue.push(r));
     }
@@ -172,9 +186,7 @@ export class ToolRegistry {
     if (this.concurrentCount === 0) this.drainQueue();
   }
 
-  // 获取独占锁（必须等所有共享锁释放）
   private async acquireExclusive(): Promise<void> {
-    // 只要已有独占锁，或仍有共享锁在执行，就持续等待
     while (this.exclusiveLock || this.concurrentCount > 0) {
       await new Promise<void>((r) => this.waitQueue.push(r));
     }
@@ -186,7 +198,6 @@ export class ToolRegistry {
     this.drainQueue();
   }
 
-  // 在锁释放时唤醒等待的工具
   private drainQueue(): void {
     const waiting = this.waitQueue.splice(0);
     for (const resolve of waiting) resolve();

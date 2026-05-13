@@ -1,0 +1,6 @@
+{"type":"message","timestamp":"2026-05-13T13:49:22.329Z","message":{"role":"user","content":"明天杭州天气如何"}}
+{"type":"message","timestamp":"2026-05-13T13:49:24.685Z","message":{"role":"assistant","content":[{"type":"tool-call","toolCallId":"call_f6efe2b498d44303bbb400","toolName":"get_weather","input":{"city":"杭州"}}]}}
+{"type":"message","timestamp":"2026-05-13T13:49:24.686Z","message":{"role":"tool","content":[{"type":"tool-result","toolCallId":"call_f6efe2b498d44303bbb400","toolName":"get_weather","output":{"type":"text","value":"晴，14-24°C，北风 2 级"}}]}}
+{"type":"message","timestamp":"2026-05-13T13:49:24.686Z","message":{"role":"assistant","content":[{"type":"text","text":"明天杭州天气晴，气温14-24°C，北风2级。"}]}}
+{"type":"message","timestamp":"2026-05-13T13:49:32.571Z","message":{"role":"user","content":"推荐穿什么衣服"}}
+{"type":"message","timestamp":"2026-05-13T13:49:35.366Z","message":{"role":"assistant","content":[{"type":"text","text":"气温14-24°C，昼夜温差较大，建议：\n\n- 白天：长袖衬衫、薄外套或针织衫  \n- 早晚：加一件轻便外套（如风衣、薄夹克）  \n- 可备一件可叠穿的内搭（如T恤+开衫），方便增减  \n\n注意防风，北风2级体感略凉，尤其早晚。"}]}}
