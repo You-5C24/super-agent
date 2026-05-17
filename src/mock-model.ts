@@ -1,5 +1,5 @@
 /**
- * Mock Model v0.6 — Dynamic Tools
+ * Mock Model v0.8 — Compaction
  *
  * 在 v0.4 基础上新增：
  * - tool_search 流程：先搜索延迟工具，再调用
@@ -10,8 +10,8 @@ let retryTestCount = 0;
 
 const TEXT_RESPONSES: Record<string, string> = {
   default:
-    '你好！我是 Super Agent v0.6，支持动态工具管理。试试"查看 vercel/ai 的 issues"（会先搜索工具），或者"帮我看看当前目录"。',
-  greeting: '你好！我是 Super Agent v0.6，支持动态工具管理和延迟加载 :)',
+    '你好！我是 Super Agent v0.8。摘要压缩已就绪，试试 compress 命令。。',
+  greeting: '你好！我是 Super Agent v0.6，支持 Profile 过滤和延迟加载 :)',
 };
 
 interface ToolCallIntent {
@@ -340,6 +340,29 @@ export function createMockModel() {
     },
 
     async doGenerate({ prompt }: any) {
+      // Detect compression request (called via generateText with compress system prompt)
+      const allText = (prompt || [])
+        .map((m: any) => {
+          if (typeof m.content === 'string') return m.content;
+          if (Array.isArray(m.content))
+            return m.content.map((c: any) => c.text || '').join('');
+          return '';
+        })
+        .join(' ');
+
+      if (
+        allText.includes('对话压缩系统') ||
+        allText.includes('压缩成一份结构化摘要')
+      ) {
+        const mockSummary = `## 用户意图\n用户在探索项目结构和代码，了解工具系统的设计。\n\n## 已完成的操作\n- 列出了当前目录文件（.env, package.json, sample-data.txt, src/）\n- 读取了 package.json（项目名 super-agent-08-compaction, 版本 0.8.0）\n- 读取了 sample-data.txt（工具系统设计文档）\n- 搜索了 src/ 目录中的 export（找到 ToolRegistry, agentLoop, SessionStore 等导出）\n\n## 关键发现\n- 项目使用 ai@5.0.98 和 @ai-sdk/openai@2.0.44\n- 工具系统包含 ToolRegistry、truncateResult、并发控制（读写锁）\n- 已实现 SessionStore（JSONL 持久化）和 PromptBuilder（模块化 Prompt）\n\n## 当前状态\n用户刚完成项目结构探索，尚未开始修改代码。\n\n## 需要保留的细节\n- 项目路径：当前工作目录\n- 关键文件：src/tool-registry.ts, src/agent-loop.ts, src/context-compressor.ts`;
+        return {
+          content: [{ type: 'text' as const, text: mockSummary }],
+          finishReason: { unified: 'stop' as const, raw: undefined },
+          usage: USAGE,
+          warnings: [],
+        };
+      }
+
       const text = extractUserText(prompt);
 
       if (text.includes('测试重试') || text.includes('test retry')) {
@@ -399,8 +422,6 @@ export function createMockModel() {
     },
 
     async doStream({ prompt }: any) {
-      const text = extractUserText(prompt);
-
       if (text.includes('测试重试') || text.includes('test retry')) {
         retryTestCount++;
         if (retryTestCount <= 2) {
