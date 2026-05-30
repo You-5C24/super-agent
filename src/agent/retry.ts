@@ -1,10 +1,10 @@
 // --- 错误分类 ---
+
 export function isRetryable(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
 
   const message = error.message || '';
 
-  // HTTP 状态码判断
   const statusMatch = message.match(/(\d{3})/);
   if (statusMatch) {
     const status = parseInt(statusMatch[1]);
@@ -13,19 +13,17 @@ export function isRetryable(error: unknown): boolean {
     if (status >= 400 && status < 500) return false;
   }
 
-  // 网络错误
   if (message.includes('ECONNRESET') || message.includes('EPIPE')) return true;
   if (message.includes('ETIMEDOUT') || message.includes('timeout')) return true;
-  if (message.includes('fetch failed') || message.includes('network')) {
+  if (message.includes('fetch failed') || message.includes('network'))
     return true;
-  }
-  // AI SDK 会把流式错误包装成 NoOutputGeneratedError
   if (message.includes('No output generated')) return true;
 
   return false;
 }
 
 // --- 指数退避 + 随机抖动 ---
+
 export function calculateDelay(
   attempt: number,
   baseMs = 500,
@@ -33,8 +31,9 @@ export function calculateDelay(
 ): number {
   const exponential = baseMs * Math.pow(2, attempt - 1);
   const capped = Math.min(exponential, maxMs);
-  const jitter = capped * 0.25;
-  return Math.max(0, Math.round(capped + (Math.random() * 2 - 1) * jitter));
+  const jitterRange = capped * 0.25;
+  const jittered = capped + (Math.random() * 2 - 1) * jitterRange;
+  return Math.max(0, Math.round(jittered));
 }
 
 export function sleep(ms: number): Promise<void> {

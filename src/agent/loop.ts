@@ -7,16 +7,18 @@ import {
   resetHistory,
 } from './loop-detection.js';
 import { isRetryable, calculateDelay, sleep } from './retry.js';
+import { type UsageTracker, normalizeUsage } from '../usage/tracker.js';
 
 const MAX_STEPS = 15;
 const MAX_RETRIES = 3;
-const TOKEN_BUDGET = 15000;
+const TOKEN_BUDGET = 50000;
 
 export async function agentLoop(
   model: any,
   registry: ToolRegistry,
   messages: ModelMessage[],
-  system: string
+  system: string,
+  tracker?: UsageTracker
 ) {
   let step = 0;
   let totalTokens = 0;
@@ -33,16 +35,15 @@ export async function agentLoop(
     let stepResponse: any;
     let stepUsage: any;
 
-    // 步骤级重试：包裹整个 stream 消费过程
     for (let attempt = 1; ; attempt++) {
       try {
-        // 使用 Vercel AI SDK 发起一次「可流式输出」的对话请求
         const result = streamText({
           model,
           system,
           tools: registry.toAISDKFormat(),
           messages,
           maxRetries: 0,
+          providerOptions: { openai: { parallelToolCalls: true } },
           onError: () => {},
         });
 
@@ -60,7 +61,6 @@ export async function agentLoop(
                 `  [调用: ${part.toolName}(${JSON.stringify(part.input)})]`
               );
 
-              // 三层防护：循环检测
               const detection = detect(part.toolName, part.input);
               if (detection.stuck) {
                 console.log(`  ${detection.message}`);
@@ -68,7 +68,7 @@ export async function agentLoop(
                   shouldBreak = true;
                 } else {
                   messages.push({
-                    role: 'user',
+                    role: 'user' as const,
                     content: `[系统提醒] ${detection.message}。请换一个思路解决问题，不要重复同样的操作。`,
                   });
                 }
@@ -77,8 +77,14 @@ export async function agentLoop(
               break;
             }
 
-            case 'tool-result':
-              console.log(`  [结果: ${JSON.stringify(part.output)}]`);
+            case 'tool-result': {
+              const output =
+                typeof part.output === 'string'
+                  ? part.output
+                  : JSON.stringify(part.output);
+              const preview =
+                output.length > 120 ? output.slice(0, 120) + '...' : output;
+              console.log(`  [结果: ${part.toolName}] ${preview}`);
               if (lastToolCall) {
                 recordResult(
                   lastToolCall.name,
@@ -87,6 +93,7 @@ export async function agentLoop(
                 );
               }
               break;
+            }
           }
         }
 
@@ -94,11 +101,10 @@ export async function agentLoop(
         stepUsage = await result.usage;
         break;
       } catch (error) {
-        // 三层防护：API容错
         if (attempt > MAX_RETRIES || !isRetryable(error as Error)) throw error;
         const delay = calculateDelay(attempt);
         console.log(
-          `  [重试] 第 ${attempt}/${MAX_RETRIES} 次失败，${delay}ms 后重试...`
+          `  [重试] 第 ${attempt}/${MAX_RETRIES} 次，${delay}ms 后...`
         );
         await sleep(delay);
         hasToolCall = false;
@@ -113,39 +119,53 @@ export async function agentLoop(
       break;
     }
 
-    // 拿到这一步的完整结果，追加到消息历史
-    messages.push(...stepResponse.messages);
+    messages.push(...stepResponse!.messages);
 
-    // 三层防护：Token 预算追踪
-    const inp =
-      typeof stepUsage?.inputTokens === 'number'
-        ? stepUsage.inputTokens
-        : stepUsage?.inputTokens?.total ?? 0;
-    const out =
-      typeof stepUsage?.outputTokens === 'number'
-        ? stepUsage.outputTokens
-        : stepUsage?.outputTokens?.total ?? 0;
-    totalTokens += inp + out;
-    const pct = Math.round((totalTokens / TOKEN_BUDGET) * 100);
-    console.log(`  [Token] ${totalTokens}/${TOKEN_BUDGET} (${pct}%)`);
+    // 把 usage 喂给 tracker；tracker 内部按四类 token 分别累加并算 cost
+    const norm = normalizeUsage(stepUsage);
+    const stepRecord = tracker?.record(model?.modelId || 'mock-model', norm);
+    totalTokens +=
+      norm.inputTokens +
+      norm.outputTokens +
+      norm.cacheReadTokens +
+      norm.cacheWriteTokens;
 
-    // 退出条件：Token 预算耗尽
+    // cache 命中时才打印一行简洁状态，让 cache hit 立刻可见
+    if (stepRecord && (norm.cacheReadTokens > 0 || norm.cacheWriteTokens > 0)) {
+      const tag =
+        norm.cacheReadTokens > 0
+          ? `\x1b[38;5;36m✓ cache hit\x1b[0m`
+          : `\x1b[38;5;220m✎ cache write\x1b[0m`;
+      const detail =
+        norm.cacheReadTokens > 0
+          ? `read ${norm.cacheReadTokens}`
+          : `write ${norm.cacheWriteTokens}`;
+      console.log(
+        `  [${tag}] ${detail} tokens · 本步 $${stepRecord.cost.toFixed(5)}`
+      );
+    }
+
+    if (totalTokens > TOKEN_BUDGET * 0.9) {
+      console.log(
+        `  [Token] ${totalTokens}/${TOKEN_BUDGET} (${Math.round(
+          (totalTokens / TOKEN_BUDGET) * 100
+        )}%)`
+      );
+    }
     if (totalTokens > TOKEN_BUDGET) {
-      console.log('\n[Token 预算耗尽，强制停止]');
+      console.log('\n[Token 预算耗尽]');
       break;
     }
 
-    // 退出条件：模型没有调用任何工具，说明它认为可以直接回复了
     if (!hasToolCall) {
       if (fullText) console.log();
       break;
     }
 
-    console.log('  \u2192 继续下一步...');
+    console.log('  → 继续下一步...');
   }
 
-  // 退出条件：达到最大步数限制
   if (step >= MAX_STEPS) {
-    console.log('\n[达到最大步数限制，强制停止]');
+    console.log('\n[达到最大步数]');
   }
 }
