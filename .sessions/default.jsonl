@@ -20,3 +20,21 @@
 {"type":"message","timestamp":"2026-05-30T07:43:05.275Z","message":{"role":"assistant","content":[{"type":"text","text":"你好！我是 Super Agent v0.10，已经接上 prompt cache 和成本追踪 :) 多聊几轮，输入 /usage 看节省了多少。"}]}}
 {"type":"message","timestamp":"2026-05-30T07:43:14.444Z","message":{"role":"user","content":"今天天气如何"}}
 {"type":"message","timestamp":"2026-05-30T07:43:17.314Z","message":{"role":"assistant","content":[{"type":"text","text":"你好！我是 Super Agent v0.10。试试 /context 看上下文占用，/usage 看 token 用量和缓存命中率，/cache off 关掉缓存对比成本差异。"}]}}
+{"type":"message","timestamp":"2026-06-08T09:10:25.475Z","message":{"role":"user","content":"记住我喜欢用 TypeScript"}}
+{"type":"message","timestamp":"2026-06-08T09:10:28.384Z","message":{"role":"assistant","content":[{"type":"text","text":"你好！我是 Super Agent v0.10。试试 /context 看上下文占用，/usage 看 token 用量和缓存命中率，/cache off 关掉缓存对比成本差异。"}]}}
+{"type":"message","timestamp":"2026-06-08T09:11:36.081Z","message":{"role":"user","content":"记住我喜欢用 TypeScript"}}
+{"type":"message","timestamp":"2026-06-08T09:11:37.507Z","message":{"role":"assistant","content":[{"type":"tool-call","toolCallId":"call-1780909896099-4c3f","toolName":"memory","input":{"action":"save","name":"我喜欢用 typescript","description":"我喜欢用 typescript","type":"user","content":"我喜欢用 typescript"}}]}}
+{"type":"message","timestamp":"2026-06-08T09:11:37.508Z","message":{"role":"tool","content":[{"type":"tool-result","toolCallId":"call-1780909896099-4c3f","toolName":"memory","output":{"type":"text","value":"已保存到记忆: user_我喜欢用-typescript.md"}}]}}
+{"type":"message","timestamp":"2026-06-08T09:11:37.508Z","message":{"role":"assistant","content":[{"type":"text","text":"好的，我已经把这条信息存到记忆里了。下次你重新打开对话，我还会记得这件事。"}]}}
+{"type":"message","timestamp":"2026-06-08T09:12:00.068Z","message":{"role":"user","content":"我的记忆"}}
+{"type":"message","timestamp":"2026-06-08T09:12:02.358Z","message":{"role":"assistant","content":[{"type":"tool-call","toolCallId":"call-1780909920076-g61x","toolName":"memory","input":{"action":"list"}}]}}
+{"type":"message","timestamp":"2026-06-08T09:12:02.358Z","message":{"role":"tool","content":[{"type":"tool-result","toolCallId":"call-1780909920076-g61x","toolName":"memory","output":{"type":"text","value":"记忆列表（共 1 条记忆）：\n  [user] 我喜欢用 typescript — 我喜欢用 typescript"}}]}}
+{"type":"message","timestamp":"2026-06-08T09:12:02.358Z","message":{"role":"assistant","content":[{"type":"text","text":"这是你目前的记忆：\n记忆列表（共 1 条记忆）：\n  [user] 我喜欢用 typescript — 我喜欢用 typescript"}]}}
+{"type":"message","timestamp":"2026-06-08T09:27:14.354Z","message":{"role":"user","content":"记住这个项目的数据库上周出过事故，改表结构要谨慎"}}
+{"type":"message","timestamp":"2026-06-08T09:27:15.751Z","message":{"role":"assistant","content":[{"type":"tool-call","toolCallId":"call-1780910834375-vcxy","toolName":"memory","input":{"action":"save","name":"这个项目的数据库上周出过事故，改表结构要谨慎","description":"这个项目的数据库上周出过事故，改表结构要谨慎","type":"project","content":"这个项目的数据库上周出过事故，改表结构要谨慎"}}]}}
+{"type":"message","timestamp":"2026-06-08T09:27:15.752Z","message":{"role":"tool","content":[{"type":"tool-result","toolCallId":"call-1780910834375-vcxy","toolName":"memory","output":{"type":"text","value":"已保存到记忆: project_这个项目的数据库上周出过事故-改表结构要谨慎.md"}}]}}
+{"type":"message","timestamp":"2026-06-08T09:27:15.752Z","message":{"role":"assistant","content":[{"type":"text","text":"好的，我已经把这条信息存到记忆里了。下次你重新打开对话，我还会记得这件事。"}]}}
+{"type":"message","timestamp":"2026-06-08T09:27:23.688Z","message":{"role":"user","content":"记住我喜欢用 TypeScript"}}
+{"type":"message","timestamp":"2026-06-08T09:27:25.047Z","message":{"role":"assistant","content":[{"type":"tool-call","toolCallId":"call-1780910843695-ix1s","toolName":"memory","input":{"action":"save","name":"我喜欢用 typescript","description":"我喜欢用 typescript","type":"user","content":"我喜欢用 typescript"}}]}}
+{"type":"message","timestamp":"2026-06-08T09:27:25.048Z","message":{"role":"tool","content":[{"type":"tool-result","toolCallId":"call-1780910843695-ix1s","toolName":"memory","output":{"type":"text","value":"已保存到记忆: user_我喜欢用-typescript.md"}}]}}
+{"type":"message","timestamp":"2026-06-08T09:27:25.048Z","message":{"role":"assistant","content":[{"type":"text","text":"好的，我已经把这条信息存到记忆里了。下次你重新打开对话，我还会记得这件事。"}]}}

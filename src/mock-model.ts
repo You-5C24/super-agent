@@ -1,5 +1,5 @@
 /**
- * Mock Model v0.10 — 模拟 prompt cache 行为
+ * Mock Model v0.11 — Memory System
  *
  * 拿 system + tools 的指纹做"前缀稳定性"判断：
  * - 第一次见的 prefix → 全部记 cacheWrite
@@ -105,9 +105,12 @@ function makeUsage(prompt: any[], outputChars = 80) {
 
 const TEXT_RESPONSES: Record<string, string> = {
   default:
-    '你好！我是 Super Agent v0.10。试试 /context 看上下文占用，/usage 看 token 用量和缓存命中率，/cache off 关掉缓存对比成本差异。',
+    '你好！我是 Super Agent v0.11。我现在有记忆系统了——试试输入 "记住我喜欢用 TypeScript" 或 "我的记忆" 看看效果。',
   greeting:
-    '你好！我是 Super Agent v0.10，已经接上 prompt cache 和成本追踪 :) 多聊几轮，输入 /usage 看节省了多少。',
+    '你好！我是 Super Agent v0.11，现在支持跨会话记忆了 :) 输入 memory 可以查看记忆相关的命令。',
+  memorySaved:
+    '好的，我已经把这条信息存到记忆里了。下次你重新打开对话，我还会记得这件事。',
+  memoryRecalled: '让我查一下记忆...',
 };
 
 interface ToolCallIntent {
@@ -181,6 +184,50 @@ function detectToolIntent(prompt: any[]): ToolCallIntent | null {
 
   if (text.includes('测试死循环')) {
     return { toolName: 'get_weather', args: { city: '北京' } };
+  }
+
+  // Memory tool — save intent
+  if (
+    (text.includes('记住') || text.includes('remember')) &&
+    !hasToolResults(prompt)
+  ) {
+    const content = text.replace(/记住|remember/g, '').trim();
+    const isPreference =
+      content.includes('喜欢') ||
+      content.includes('偏好') ||
+      content.includes('prefer');
+    const isFeedback =
+      content.includes('不要') ||
+      content.includes('别') ||
+      content.includes("don't");
+    const type = isFeedback ? 'feedback' : isPreference ? 'user' : 'project';
+    return {
+      toolName: 'memory',
+      args: {
+        action: 'save',
+        name: content.slice(0, 30),
+        description: content.slice(0, 60),
+        type,
+        content,
+      },
+    };
+  }
+
+  // Memory tool — list/search intent
+  if (
+    (text.includes('我的记忆') ||
+      text.includes('记忆列表') ||
+      text === 'memory list') &&
+    !hasToolResults(prompt)
+  ) {
+    return { toolName: 'memory', args: { action: 'list' } };
+  }
+  if (
+    (text.includes('搜索记忆') || text.includes('memory search')) &&
+    !hasToolResults(prompt)
+  ) {
+    const query = text.replace(/搜索记忆|memory search/g, '').trim() || 'all';
+    return { toolName: 'memory', args: { action: 'search', query } };
   }
 
   // 如果刚刚 tool_search 返回了结果，现在要调用发现的工具
@@ -340,6 +387,20 @@ function detectToolIntent(prompt: any[]): ToolCallIntent | null {
 function pickTextResponse(prompt: any[]): string {
   if (hasToolResults(prompt)) {
     const combined = getToolResultContent(prompt);
+
+    // Memory tool responses
+    if (
+      combined.includes('已保存到记忆') ||
+      combined.includes('saved to memory')
+    ) {
+      return TEXT_RESPONSES.memorySaved;
+    }
+    if (combined.includes('记忆列表') || combined.includes('条记忆')) {
+      return `这是你目前的记忆：\n${combined}`;
+    }
+    if (combined.includes('搜索结果') || combined.includes('没有找到')) {
+      return combined;
+    }
 
     if (combined.includes('[DIR]') || combined.includes('[FILE]')) {
       return `当前目录的文件列表：\n${combined}`;

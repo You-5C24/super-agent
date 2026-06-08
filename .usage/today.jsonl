@@ -1,2 +1,11 @@
 {"ts":1780126985275,"model":"mock-model","cost":0.000246,"inputTokens":131,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
 {"ts":1780126997311,"model":"mock-model","cost":0.000269,"inputTokens":154,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1780909828383,"model":"mock-model","cost":0.000272,"inputTokens":157,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1780909896227,"model":"mock-model","cost":0.000272,"inputTokens":157,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1780909897506,"model":"mock-model","cost":0.00036,"inputTokens":245,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1780909920183,"model":"mock-model","cost":0.000405,"inputTokens":290,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1780909922358,"model":"mock-model","cost":0.000472,"inputTokens":357,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1780910834502,"model":"mock-model","cost":0.000307,"inputTokens":192,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1780910835751,"model":"mock-model","cost":0.000405,"inputTokens":290,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1780910843801,"model":"mock-model","cost":0.000445,"inputTokens":330,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1780910845047,"model":"mock-model","cost":0.000533,"inputTokens":418,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
