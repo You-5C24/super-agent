@@ -1,5 +1,5 @@
 /**
- * Mock Model v0.11 — Memory System
+ * Mock Model v0.12 — RAG
  *
  * 拿 system + tools 的指纹做"前缀稳定性"判断：
  * - 第一次见的 prefix → 全部记 cacheWrite
@@ -105,9 +105,9 @@ function makeUsage(prompt: any[], outputChars = 80) {
 
 const TEXT_RESPONSES: Record<string, string> = {
   default:
-    '你好！我是 Super Agent v0.11。我现在有记忆系统了——试试输入 "记住我喜欢用 TypeScript" 或 "我的记忆" 看看效果。',
+    '你好！我是 Super Agent v0.12。我现在有知识库了——试试 "上次部署出了什么问题？" 看看 RAG 效果。',
   greeting:
-    '你好！我是 Super Agent v0.11，现在支持跨会话记忆了 :) 输入 memory 可以查看记忆相关的命令。',
+    '你好！我是 Super Agent v0.12，已经加载了知识库 :) 直接问我项目相关的问题吧。',
   memorySaved:
     '好的，我已经把这条信息存到记忆里了。下次你重新打开对话，我还会记得这件事。',
   memoryRecalled: '让我查一下记忆...',
@@ -228,6 +228,33 @@ function detectToolIntent(prompt: any[]): ToolCallIntent | null {
   ) {
     const query = text.replace(/搜索记忆|memory search/g, '').trim() || 'all';
     return { toolName: 'memory', args: { action: 'search', query } };
+  }
+
+  // RAG tool — ingest intent
+  if (
+    (text.includes('导入') || text.includes('ingest')) &&
+    (text.includes('文档') || text.includes('.md')) &&
+    !hasToolResults(prompt)
+  ) {
+    const pathMatch = text.match(/([\w/.-]+\.md)/);
+    const path = pathMatch ? pathMatch[1] : 'docs/deployment-guide.md';
+    return { toolName: 'rag_ingest', args: { path } };
+  }
+
+  // RAG tool — search intent
+  if (
+    !hasToolResults(prompt) &&
+    (text.includes('部署') ||
+      text.includes('deploy') ||
+      text.includes('事故') ||
+      text.includes('回滚') ||
+      text.includes('监控') ||
+      text.includes('迁移') ||
+      text.includes('知识库') ||
+      text.includes('搜索知识') ||
+      text.includes('查资料'))
+  ) {
+    return { toolName: 'rag_search', args: { query: text } };
   }
 
   // 如果刚刚 tool_search 返回了结果，现在要调用发现的工具
@@ -398,6 +425,18 @@ function pickTextResponse(prompt: any[]): string {
     if (combined.includes('记忆列表') || combined.includes('条记忆')) {
       return `这是你目前的记忆：\n${combined}`;
     }
+
+    // RAG tool responses
+    if (combined.includes('已导入') && combined.includes('文档片段')) {
+      return `文档已导入知识库。${combined}`;
+    }
+    if (combined.includes('综合分') || combined.includes('来源:')) {
+      return `根据知识库的检索结果：\n\n${combined}`;
+    }
+    if (combined.includes('知识库为空')) {
+      return combined;
+    }
+
     if (combined.includes('搜索结果') || combined.includes('没有找到')) {
       return combined;
     }
