@@ -29,3 +29,17 @@
 {"ts":1781772782574,"model":"mock-model","cost":0.000833,"inputTokens":718,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
 {"ts":1781772782682,"model":"mock-model","cost":0.000906,"inputTokens":791,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
 {"ts":1781772790821,"model":"mock-model","cost":0.000978,"inputTokens":863,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1781955250151,"model":"mock-model","cost":0.000746,"inputTokens":631,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1781955250261,"model":"mock-model","cost":0.000812,"inputTokens":697,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1781955250370,"model":"mock-model","cost":0.000928,"inputTokens":813,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1781955250479,"model":"mock-model","cost":0.001044,"inputTokens":929,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1781955250585,"model":"mock-model","cost":0.00116,"inputTokens":1045,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1781955250691,"model":"mock-model","cost":0.001276,"inputTokens":1161,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1781955250796,"model":"mock-model","cost":0.001392,"inputTokens":1277,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1781955714298,"model":"mock-model","cost":0.000746,"inputTokens":631,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1781955714410,"model":"mock-model","cost":0.000812,"inputTokens":697,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1781955714516,"model":"mock-model","cost":0.000928,"inputTokens":813,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1781955714622,"model":"mock-model","cost":0.001044,"inputTokens":929,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1781955714729,"model":"mock-model","cost":0.00116,"inputTokens":1045,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1781955714838,"model":"mock-model","cost":0.001276,"inputTokens":1161,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1781955714948,"model":"mock-model","cost":0.001392,"inputTokens":1277,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
