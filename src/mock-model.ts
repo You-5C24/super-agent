@@ -107,9 +107,9 @@ function makeUsage(prompt: any[], outputChars = 80) {
 
 const TEXT_RESPONSES: Record<string, string> = {
   default:
-    '你好！我是 Super Agent v0.14——现在支持 Skills 了。输入 /skill 看看有哪些可用的，或者直接 /code-review 试试。',
+    '你好！我是 Super Agent v0.15——现在支持 Plugin 动态加载了。试试 /plugin 看看已加载的插件，或者让我帮你查数据库。',
   greeting:
-    '你好！我是 Super Agent v0.14，支持 Skills 切换。试试 /code-review 进入代码审查模式 :)',
+    '你好！我是 Super Agent v0.15，支持 Plugin 扩展。试试让我查数据库或者 /plugin 管理插件 :)',
   memorySaved:
     '好的，我已经把这条信息存到记忆里了。下次你重新打开对话，我还会记得这件事。',
   memoryRecalled: '让我查一下记忆...',
@@ -307,6 +307,53 @@ function detectToolIntent(prompt: any[]): ToolCallIntent | null {
     return { toolName: 'rag_ingest', args: { path } };
   }
 
+  // Plugin tools — supabase (直接调用，不需要 tool_search)
+  if (
+    !hasToolResults(prompt) &&
+    (text.includes('有哪些表') ||
+      text.includes('表列表') ||
+      text.includes('list table'))
+  ) {
+    return { toolName: 'supabase__list_tables', args: {} };
+  }
+  if (
+    !hasToolResults(prompt) &&
+    (text.includes('查用户') ||
+      text.includes('用户数据') ||
+      text.includes('query user'))
+  ) {
+    return { toolName: 'supabase__query', args: { table: 'users' } };
+  }
+  if (
+    !hasToolResults(prompt) &&
+    (text.includes('查帖子') ||
+      text.includes('文章列表') ||
+      text.includes('query post'))
+  ) {
+    return { toolName: 'supabase__query', args: { table: 'posts' } };
+  }
+  if (
+    !hasToolResults(prompt) &&
+    (text.includes('插入') || text.includes('新增') || text.includes('insert'))
+  ) {
+    return {
+      toolName: 'supabase__insert',
+      args: {
+        table: 'users',
+        data: { name: '赵六', email: 'zhao@example.com', role: 'user' },
+      },
+    };
+  }
+  if (
+    !hasToolResults(prompt) &&
+    (text.includes('数据库') ||
+      text.includes('database') ||
+      text.includes('supabase') ||
+      text.includes('sql'))
+  ) {
+    return { toolName: 'supabase__list_tables', args: {} };
+  }
+
   // RAG tool — search intent
   if (
     !hasToolResults(prompt) &&
@@ -352,12 +399,6 @@ function detectToolIntent(prompt: any[]): ToolCallIntent | null {
         args: { url: 'https://example.com' },
       };
     }
-    if (
-      toolResults.includes('supabase') ||
-      toolResults.includes('mcp__supabase')
-    ) {
-      return { toolName: 'mcp__supabase__list_tables', args: {} };
-    }
     return null;
   }
 
@@ -374,11 +415,7 @@ function detectToolIntent(prompt: any[]): ToolCallIntent | null {
       args: { query: 'mcp__github__list_issues' },
     };
   }
-  if (
-    text.includes('notion') ||
-    text.includes('笔记') ||
-    text.includes('文档')
-  ) {
+  if (text.includes('notion') || text.includes('笔记')) {
     return {
       toolName: 'tool_search',
       args: { query: 'mcp__notion__search_pages' },
@@ -392,17 +429,6 @@ function detectToolIntent(prompt: any[]): ToolCallIntent | null {
     return {
       toolName: 'tool_search',
       args: { query: 'mcp__browser__navigate' },
-    };
-  }
-  if (
-    text.includes('数据库') ||
-    text.includes('database') ||
-    text.includes('supabase') ||
-    text.includes('sql')
-  ) {
-    return {
-      toolName: 'tool_search',
-      args: { query: 'mcp__supabase__list_tables' },
     };
   }
 
@@ -478,6 +504,8 @@ function detectToolIntent(prompt: any[]): ToolCallIntent | null {
 }
 
 function pickTextResponse(prompt: any[]): string {
+  const text = extractUserText(prompt);
+
   if (hasToolResults(prompt)) {
     const combined = getToolResultContent(prompt);
 
@@ -503,6 +531,20 @@ function pickTextResponse(prompt: any[]): string {
     }
     if (combined.includes('记忆列表') || combined.includes('条记忆')) {
       return `这是你目前的记忆：\n${combined}`;
+    }
+
+    // Plugin tool responses (supabase)
+    if (combined.includes('tables') && combined.includes('users')) {
+      return `数据库里有这些表：\n${combined}`;
+    }
+    if (combined.includes('"table"') && combined.includes('"rows"')) {
+      return `查询结果如下：\n${combined}`;
+    }
+    if (
+      combined.includes('"success":true') &&
+      combined.includes('"inserted"')
+    ) {
+      return `数据插入成功：\n${combined}`;
     }
 
     // RAG tool responses
@@ -544,7 +586,6 @@ function pickTextResponse(prompt: any[]): string {
     return `工具返回了以下信息：\n${combined}`;
   }
 
-  const text = extractUserText(prompt);
   if (text.includes('你好') || text.includes('hello') || text.includes('hi'))
     return TEXT_RESPONSES.greeting;
   return TEXT_RESPONSES.default;

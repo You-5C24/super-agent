@@ -9,9 +9,9 @@ import {
 import { isRetryable, calculateDelay, sleep } from './retry.js';
 import { type UsageTracker, normalizeUsage } from '../usage/tracker.js';
 
-const MAX_STEPS = 15;
+const MAX_STEPS = 30;
 const MAX_RETRIES = 3;
-const TOKEN_BUDGET = 50000;
+const TOKEN_BUDGET = 200000;
 
 export async function agentLoop(
   model: any,
