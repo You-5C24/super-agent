@@ -43,3 +43,7 @@
 {"ts":1781955714729,"model":"mock-model","cost":0.00116,"inputTokens":1045,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
 {"ts":1781955714838,"model":"mock-model","cost":0.001276,"inputTokens":1161,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
 {"ts":1781955714948,"model":"mock-model","cost":0.001392,"inputTokens":1277,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1782121092102,"model":"mock-model","cost":0.000437,"inputTokens":322,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1782121095870,"model":"mock-model","cost":0.000514,"inputTokens":399,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1782121109075,"model":"mock-model","cost":0.000549,"inputTokens":434,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1782121116319,"model":"mock-model","cost":0.000663,"inputTokens":548,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
