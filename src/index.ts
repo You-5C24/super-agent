@@ -70,6 +70,7 @@ const embedFn = process.env.DASHSCOPE_API_KEY
   : createMockEmbedder();
 registry.register(...createRagTools(vectorStore, embedFn));
 
+// ── MCP ────────────────────────────────
 async function connectMCP() {
   const mockClient = new MockMCPClient();
   const tools = await registry.registerMCPServer('github', mockClient);
