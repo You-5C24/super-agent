@@ -47,3 +47,4 @@
 {"ts":1782121095870,"model":"mock-model","cost":0.000514,"inputTokens":399,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
 {"ts":1782121109075,"model":"mock-model","cost":0.000549,"inputTokens":434,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
 {"ts":1782121116319,"model":"mock-model","cost":0.000663,"inputTokens":548,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1784105645138,"model":"mock-model","cost":0.00044,"inputTokens":325,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
