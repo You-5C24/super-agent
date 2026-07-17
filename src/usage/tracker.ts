@@ -65,24 +65,6 @@ export const PRICE_TABLE: Record<string, ModelPricing> = {
     cacheWrite: 0.27,
     cacheRead: 0.027,
   },
-  'deepseek-chat': {
-    input: 0.27,
-    output: 1.1,
-    cacheWrite: 0.27,
-    cacheRead: 0.027,
-  },
-  'deepseek-v4-flash': {
-    input: 0.27,
-    output: 1.1,
-    cacheWrite: 0.27,
-    cacheRead: 0.027,
-  },
-  'deepseek-v4-pro': {
-    input: 0.55,
-    output: 2.19,
-    cacheWrite: 0.55,
-    cacheRead: 0.055,
-  },
   'qwen3-6-plus': { input: 0.4, output: 1.2, cacheWrite: 0.4, cacheRead: 0.04 },
   'kimi-k2-6': { input: 0.6, output: 2.5, cacheWrite: 0.6, cacheRead: 0.15 },
   'doubao-2-0-pro': {

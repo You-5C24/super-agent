@@ -18,15 +18,28 @@ export async function agentLoop(
   registry: ToolRegistry,
   messages: ModelMessage[],
   system: string,
-  tracker?: UsageTracker
+  tracker?: UsageTracker,
+  tag?: string,
+  maxSteps?: number,
+  signal?: AbortSignal
 ) {
   let step = 0;
   let totalTokens = 0;
   resetHistory();
+  const prefix = tag ? `  ${tag} ` : '';
+  const stepLimit = maxSteps ?? MAX_STEPS;
 
-  while (step < MAX_STEPS) {
+  while (step < stepLimit) {
+    if (signal?.aborted) {
+      if (tag) console.log(`${prefix}已取消`);
+      break;
+    }
     step++;
-    console.log(`\n--- Step ${step} ---`);
+    if (tag) {
+      console.log(`${prefix}Step ${step}/${stepLimit}`);
+    } else {
+      console.log(`\n--- Step ${step} ---`);
+    }
 
     let hasToolCall = false;
     let fullText = '';
@@ -43,6 +56,7 @@ export async function agentLoop(
           tools: registry.toAISDKFormat(),
           messages,
           maxRetries: 0,
+          abortSignal: signal,
           providerOptions: { openai: { parallelToolCalls: true } },
           onError: () => {},
         });
@@ -50,16 +64,20 @@ export async function agentLoop(
         for await (const part of result.fullStream) {
           switch (part.type) {
             case 'text-delta':
-              process.stdout.write(part.text);
+              if (!tag) process.stdout.write(part.text);
               fullText += part.text;
               break;
 
             case 'tool-call': {
               hasToolCall = true;
               lastToolCall = { name: part.toolName, input: part.input };
-              console.log(
-                `  [调用: ${part.toolName}(${JSON.stringify(part.input)})]`
-              );
+              if (tag) {
+                console.log(`${prefix}调用 ${part.toolName}`);
+              } else {
+                console.log(
+                  `  [调用: ${part.toolName}(${JSON.stringify(part.input)})]`
+                );
+              }
 
               const detection = detect(part.toolName, part.input);
               if (detection.stuck) {
@@ -82,9 +100,13 @@ export async function agentLoop(
                 typeof part.output === 'string'
                   ? part.output
                   : JSON.stringify(part.output);
-              const preview =
-                output.length > 120 ? output.slice(0, 120) + '...' : output;
-              console.log(`  [结果: ${part.toolName}] ${preview}`);
+              const isSubAgent = part.toolName === 'spawn_agent';
+              const preview = isSubAgent
+                ? output
+                : output.length > 120
+                ? output.slice(0, 120) + '...'
+                : output;
+              if (!tag) console.log(`  [结果: ${part.toolName}] ${preview}`);
               if (lastToolCall) {
                 recordResult(
                   lastToolCall.name,
@@ -115,13 +137,12 @@ export async function agentLoop(
     }
 
     if (shouldBreak) {
-      console.log('\n[循环检测触发，Agent 已停止]');
+      if (!tag) console.log('\n[循环检测触发，Agent 已停止]');
       break;
     }
 
     messages.push(...stepResponse!.messages);
 
-    // 把 usage 喂给 tracker；tracker 内部按四类 token 分别累加并算 cost
     const norm = normalizeUsage(stepUsage);
     const stepRecord = tracker?.record(model?.modelId || 'mock-model', norm);
     totalTokens +=
@@ -130,9 +151,12 @@ export async function agentLoop(
       norm.cacheReadTokens +
       norm.cacheWriteTokens;
 
-    // cache 命中时才打印一行简洁状态，让 cache hit 立刻可见
-    if (stepRecord && (norm.cacheReadTokens > 0 || norm.cacheWriteTokens > 0)) {
-      const tag =
+    if (
+      !tag &&
+      stepRecord &&
+      (norm.cacheReadTokens > 0 || norm.cacheWriteTokens > 0)
+    ) {
+      const cacheTag =
         norm.cacheReadTokens > 0
           ? `\x1b[38;5;36m✓ cache hit\x1b[0m`
           : `\x1b[38;5;220m✎ cache write\x1b[0m`;
@@ -141,11 +165,11 @@ export async function agentLoop(
           ? `read ${norm.cacheReadTokens}`
           : `write ${norm.cacheWriteTokens}`;
       console.log(
-        `  [${tag}] ${detail} tokens · 本步 $${stepRecord.cost.toFixed(5)}`
+        `  [${cacheTag}] ${detail} tokens · 本步 $${stepRecord.cost.toFixed(5)}`
       );
     }
 
-    if (totalTokens > TOKEN_BUDGET * 0.9) {
+    if (!tag && totalTokens > TOKEN_BUDGET * 0.9) {
       console.log(
         `  [Token] ${totalTokens}/${TOKEN_BUDGET} (${Math.round(
           (totalTokens / TOKEN_BUDGET) * 100
@@ -153,19 +177,23 @@ export async function agentLoop(
       );
     }
     if (totalTokens > TOKEN_BUDGET) {
-      console.log('\n[Token 预算耗尽]');
+      if (!tag) console.log('\n[Token 预算耗尽]');
       break;
     }
 
     if (!hasToolCall) {
-      if (fullText) console.log();
+      if (!tag && fullText) console.log();
       break;
     }
 
-    console.log('  → 继续下一步...');
+    if (!tag) console.log('  → 继续下一步...');
   }
 
-  if (step >= MAX_STEPS) {
-    console.log('\n[达到最大步数]');
+  if (step >= stepLimit) {
+    if (tag) {
+      console.log(`${prefix}达到步数上限 (${stepLimit})`);
+    } else {
+      console.log('\n[达到最大步数]');
+    }
   }
 }

@@ -10,12 +10,11 @@ export const contextCommands: CommandHandler[] = [
     if (cmd !== '/context' && cmd !== 'context') return false;
     const SYSTEM = ctx.builder.build(ctx.makePromptCtx());
     const memoryChars = ctx.memoryStore?.buildPromptSection().length ?? 0;
-    const deepseekModelId = process.env.DEEPSEEK_MODEL || 'deepseek-v4-flash';
     const snapshot = buildContextSnapshot({
-      modelName: process.env.DEEPSEEK_API_KEY
-        ? deepseekModelId
+      modelName: process.env.DASHSCOPE_API_KEY
+        ? 'Qwen Plus'
         : 'Mock Model (开发用)',
-      modelId: process.env.DEEPSEEK_API_KEY ? deepseekModelId : 'mock-model',
+      modelId: process.env.DASHSCOPE_API_KEY ? 'qwen3-6-plus' : 'mock-model',
       windowTokens: 1_000_000,
       systemPromptChars: SYSTEM.length,
       toolDescriptionChars: ctx.registry

@@ -51,3 +51,6 @@
 {"ts":1784166373270,"model":"deepseek-v4-flash","cost":0.000124288,"inputTokens":14,"outputTokens":53,"cacheReadTokens":2304,"cacheWriteTokens":0}
 {"ts":1784254487416,"model":"mock-model","cost":0.000433,"inputTokens":318,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
 {"ts":1784254491520,"model":"mock-model","cost":0.000461,"inputTokens":346,"outputTokens":23,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1784255445455,"model":"deepseek-v4-flash","cost":0.0009124100000000001,"inputTokens":2593,"outputTokens":193,"cacheReadTokens":0,"cacheWriteTokens":0}
+{"ts":1784255447068,"model":"deepseek-v4-flash","cost":0.000257856,"inputTokens":124,"outputTokens":138,"cacheReadTokens":2688,"cacheWriteTokens":0}
+{"ts":1784255449075,"model":"deepseek-v4-flash","cost":0.000216538,"inputTokens":35,"outputTokens":116,"cacheReadTokens":2944,"cacheWriteTokens":0}
