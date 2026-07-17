@@ -1,9 +1,9 @@
 /**
- * Mock Model v0.14 — Skills
+ * Mock Model v0.17 — Channel
  *
  * 在 v0.12 RAG 的基础上，新增对记忆维护场景的意图识别：
  * - "lint 记忆 / 检查记忆"     → memory action=lint
- * - "搜记��� xxx / 找记忆 xxx" → memory action=search（结果走 BM25）
+ * - "搜记忆 xxx / 找记忆 xxx" → memory action=search（结果走 BM25）
  *
  * 拿 system + tools 的指纹做"前缀稳定性"判断：
  * - 第一次见的 prefix → 全部记 cacheWrite
@@ -107,9 +107,9 @@ function makeUsage(prompt: any[], outputChars = 80) {
 
 const TEXT_RESPONSES: Record<string, string> = {
   default:
-    '你好！我是 Super Agent v0.15——现在支持 Plugin 动态加载了。试试 /plugin 看看已加载的插件，或者让我帮你查数据库。',
+    '你好！我是 Super Agent v0.17——现在支持 Plugin 动态加载了。试试 /plugin 看看已加载的插件，或者让我帮你查数据库。',
   greeting:
-    '你好！我是 Super Agent v0.15，支持 Plugin 扩展。试试让我查数据库或者 /plugin 管理插件 :)',
+    '你好！我是 Super Agent v0.17，支持 Plugin 扩展。试试让我查数据库或者 /plugin 管理插件 :)',
   memorySaved:
     '好的，我已经把这条信息存到记忆里了。下次你重新打开对话，我还会记得这件事。',
   memoryRecalled: '让我查一下记忆...',
@@ -456,6 +456,19 @@ function detectToolIntent(prompt: any[]): ToolCallIntent | null {
     return {
       toolName: 'bash',
       args: { command: 'echo "Hello from bash!" && date' },
+    };
+  }
+  if (
+    text.includes('测试危险') ||
+    text.includes('dangerous') ||
+    text.includes('删除所有')
+  ) {
+    return { toolName: 'bash', args: { command: 'rm -rf /tmp/test-data' } };
+  }
+  if (text.includes('测试写文件') || text.includes('test write')) {
+    return {
+      toolName: 'write_file',
+      args: { path: 'test-output.txt', content: 'Hello from hook test' },
     };
   }
   if (

@@ -1,6 +1,6 @@
 {
-  "name": "super-agent-16-channel",
-  "version": "0.16.0",
+  "name": "super-agent-18-cron",
+  "version": "0.18.0",
   "type": "module",
   "scripts": {
     "start": "tsx src/index.ts",
@@ -11,6 +11,7 @@
     "@hono/node-server": "1.14.1",
     "@larksuiteoapi/node-sdk": "^1.62.1",
     "ai": "5.0.98",
+    "croner": "^10.0.1",
     "dotenv": "16.5.0",
     "turndown": "^7.2.4",
     "hono": "4.7.10",

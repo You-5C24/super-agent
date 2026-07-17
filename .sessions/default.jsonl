@@ -80,3 +80,8 @@
 {"type":"message","timestamp":"2026-07-16T01:46:13.271Z","message":{"role":"assistant","content":[{"type":"text","text":"我当前的角色就是 **Super Agent**，配备了工具调用能力、记忆系统和知识库。\n\n需要我做什么？直接说就行。"}]}}
 {"type":"message","timestamp":"2026-07-16T01:47:10.736Z","message":{"role":"user","content":"/rolw guest"}}
 {"type":"message","timestamp":"2026-07-16T02:23:43.556Z","message":{"role":"user","content":"/hook"}}
+{"type":"message","timestamp":"2026-07-17T02:14:44.976Z","message":{"role":"user","content":"帮我创建一个每 10 秒执行的定时任务，输出一句名言"}}
+{"type":"message","timestamp":"2026-07-17T02:14:47.416Z","message":{"role":"assistant","content":[{"type":"text","text":"你好！我是 Super Agent v0.17——现在支持 Plugin 动态加载了。试试 /plugin 看看已加载的插件，或者让我帮你查数据库。"}]}}
+{"type":"message","timestamp":"2026-07-17T02:14:49.127Z","message":{"role":"user","content":"帮我创建一个每 10 秒执行的定时任务，输出一句名言"}}
+{"type":"message","timestamp":"2026-07-17T02:14:51.521Z","message":{"role":"assistant","content":[{"type":"text","text":"你好！我是 Super Agent v0.17——现在支持 Plugin 动态加载了。试试 /plugin 看看已加载的插件，或者让我帮你查数据库。"}]}}
+{"type":"message","timestamp":"2026-07-17T02:15:33.726Z","message":{"role":"user","content":"帮我创建一个每 30 秒执行的定时任务，输出一句名言"}}
