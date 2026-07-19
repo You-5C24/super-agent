@@ -1,0 +1,51 @@
+{
+  "version": "1.0",
+  "model": {
+    "provider": "openai",
+    "name": "deepseek-v4-flash",
+    "baseURL": "https://api.deepseek.com/v1",
+    "apiKey": "${DEEPSEEK_API_KEY}"
+  },
+  "plugins": [
+    {
+      "name": "supabase",
+      "enabled": false,
+      "config": {}
+    }
+  ],
+  "channels": {
+    "feishu": {
+      "enabled": true,
+      "appId": "${FEISHU_APP_ID}",
+      "appSecret": "${FEISHU_APP_SECRET}",
+      "port": 3000
+    }
+  },
+  "agents": {
+    "maxSpawnDepth": 1,
+    "maxConcurrent": 1,
+    "defaultTimeout": 60000
+  },
+  "security": {
+    "defaultRole": "developer",
+    "auditLog": true,
+    "bashTimestamp": true
+  },
+  "memory": {
+    "dataDir": "."
+  },
+  "rag": {
+    "enabled": true,
+    "docsDir": "docs"
+  },
+  "cron": {
+    "enabled": true,
+    "dataDir": "."
+  },
+  "session": {
+    "id": "default"
+  },
+  "usage": {
+    "trackingFile": ".usage/today.jsonl"
+  }
+}

@@ -1,9 +1,13 @@
 {
-  "name": "super-agent-18-cron",
-  "version": "0.18.0",
+  "name": "super-agent",
+  "version": "1.0.0",
   "type": "module",
+  "bin": {
+    "super-agent": "src/index.ts"
+  },
   "scripts": {
     "start": "tsx src/index.ts",
+    "init": "tsx src/index.ts init",
     "continue": "tsx src/index.ts --continue"
   },
   "dependencies": {
@@ -13,8 +17,8 @@
     "ai": "5.0.98",
     "croner": "^10.0.1",
     "dotenv": "16.5.0",
-    "turndown": "^7.2.4",
     "hono": "4.7.10",
+    "turndown": "^7.2.4",
     "zod": "3.25.76"
   },
   "devDependencies": {
